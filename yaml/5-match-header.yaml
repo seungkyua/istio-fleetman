@@ -1,0 +1,42 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: staff-service
+  namespace: default
+spec:
+  hosts:
+  - fleetman-staff-service.default.svc.cluster.local  # The Service DNS (ie the regular K8S Service) name that we're applying routing rules to.
+  http:
+  - match:
+    - headers:  # IF
+        x-my-header:
+          exact: canary
+    route: # THEN
+    - destination:
+        host: fleetman-staff-service.default.svc.cluster.local
+        subset: risky-group
+  - route:
+    - destination:
+        host: fleetman-staff-service.default.svc.cluster.local # The Target DNS name
+        subset: safe-group  # The name defined in the DestinationRule
+      weight: 90
+    - destination:
+        host: fleetman-staff-service.default.svc.cluster.local # The Target DNS name
+        subset: risky-group  # The name defined in the DestinationRule
+      weight: 10
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule       # Defining which pods should be part of each subset
+metadata:
+  name: staff-service
+  namespace: default
+spec:
+  host: fleetman-staff-service # Service
+  subsets:
+  - labels:   # SELECTOR.
+      version: safe # find pods with label "safe"
+    name: safe-group
+  - labels:
+      version: risky
+    name: risky-group
+
