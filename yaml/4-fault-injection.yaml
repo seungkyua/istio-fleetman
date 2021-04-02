@@ -1,0 +1,35 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: staff-service
+  namespace: default
+spec:
+  hosts:
+    - fleetman-staff-service.default.svc.cluster.local  # The Service DNS (ie the regular K8S Service) name that we're applying routing rules to.
+  http:
+    - route:
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local # The Target DNS name
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule       # Defining which pods should be part of each subset
+metadata:
+  name: staff-service
+  namespace: default
+spec:
+  host: fleetman-staff-service # Service
+  trafficPolicy:
+    outlierDetection: # Circuit Breakers HAVE TO BE SWITCHED ON
+      maxEjectionPercent: 100
+      consecutive5xxErrors: 2
+      interval: 10s
+      baseEjectionTime: 180s
+  subsets:
+    - labels:   # SELECTOR.
+        version: safe # find pods with label "safe"
+      name: safe-group
+    - labels:
+        version: risky
+      name: risky-group
+
