@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
-  name: fleetman-gateway-http
+  name: fleetman-gateway-https
 spec:
   selector:
     istio: istio-ingress-gateway
@@ -9,23 +9,26 @@ spec:
     app: istio-ingressgateway
   servers:
   - port:
-      number: 80
-      name: http
-      protocol: HTTP
+      number: 443
+      name: https
+      protocol: HTTPS
     hosts:
     - "fleetman-ahnsk.taco-cat.xyz"
+    tls:
+      mode: SIMPLE
+      credentialName: taco-cat-tls
 
 ---
 kind: VirtualService
 apiVersion: networking.istio.io/v1beta1
 metadata:
-  name: fleetman-webapp-http
+  name: fleetman-webapp-https
   namespace: default
 spec:
   hosts:
   - "fleetman-ahnsk.taco-cat.xyz"
   gateways:
-  - fleetman-gateway-http
+  - fleetman-gateway-https
   http:
   - route:
     - destination:
